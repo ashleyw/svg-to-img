@@ -9,7 +9,8 @@ exports.config = {
 };
 exports.defaultOptions = {
     quality: 1,
-    type: "png"
+    type: "png",
+    offlineMode: true,
 };
 exports.defaultPngShorthandOptions = {
     type: "png"

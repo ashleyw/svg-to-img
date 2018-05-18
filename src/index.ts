@@ -5,8 +5,8 @@ import { IOptions, IShorthandOptions } from "./typings";
 
 const queue: Array<(result: puppeteer.Browser) => void> = [];
 let browserDestructionTimeout: any; // TODO: add proper typing
-let browserInstance: puppeteer.Browser|undefined;
-let browserState: "closed"|"opening"|"open" = "closed";
+let browserInstance: puppeteer.Browser | undefined;
+let browserState: "closed" | "opening" | "open" = "closed";
 
 const executeQueuedRequests = (browser: puppeteer.Browser) => {
   for (const resolve of queue) {
@@ -46,7 +46,7 @@ const getBrowser = async (): Promise<puppeteer.Browser> => {
   });
 };
 
-const scheduleBrowserForDestruction = () => {
+const scheduleBrowserForDestruction = (timeout: number = 500) => {
   clearTimeout(browserDestructionTimeout);
   browserDestructionTimeout = setTimeout(async () => {
     /* istanbul ignore next */
@@ -54,17 +54,17 @@ const scheduleBrowserForDestruction = () => {
       browserState = "closed";
       await browserInstance.close();
     }
-  }, 500);
+  }, timeout);
 };
 
-const convertSvg = async (inputSvg: Buffer|string, passedOptions: IOptions): Promise<Buffer|string> => {
+const convertSvg = async (inputSvg: Buffer | string, passedOptions: IOptions): Promise<Buffer | string> => {
   const svg = Buffer.isBuffer(inputSvg) ? (inputSvg as Buffer).toString("utf8") : inputSvg;
-  const options = {...defaultOptions, ...passedOptions};
+  const options: IOptions = { ...defaultOptions, ...passedOptions };
   const browser = await getBrowser();
   const page = (await browser.pages())[0];
 
-  // ⚠️ Offline mode is enabled to prevent any HTTP requests over the network
-  await page.setOfflineMode(true);
+  // Offline mode can be enabled to prevent any HTTP requests over the network
+  await page.setOfflineMode(options.offlineMode as boolean);
 
   // Infer the file type from the file path if no type is provided
   if (!passedOptions.type && options.path) {
@@ -85,7 +85,7 @@ const convertSvg = async (inputSvg: Buffer|string, passedOptions: IOptions): Pro
     jpegBackground: config.jpegBackground
   }));
 
-  scheduleBrowserForDestruction();
+  scheduleBrowserForDestruction(options.renderTimeout);
 
   const buffer = Buffer.from(base64, "base64");
 
@@ -104,31 +104,31 @@ const convertSvg = async (inputSvg: Buffer|string, passedOptions: IOptions): Pro
   return buffer.toString(options.encoding);
 };
 
-const to = (svg: Buffer|string) => {
-  return async (options: IOptions): Promise<Buffer|string> => {
+const to = (svg: Buffer | string) => {
+  return async (options: IOptions): Promise<Buffer | string> => {
     return convertSvg(svg, options);
   };
 };
 
-const toPng = (svg: Buffer|string) => {
-  return async (options?: IShorthandOptions): Promise<Buffer|string> => {
-    return convertSvg(svg, {...defaultPngShorthandOptions, ...options});
+const toPng = (svg: Buffer | string) => {
+  return async (options?: IShorthandOptions): Promise<Buffer | string> => {
+    return convertSvg(svg, { ...defaultPngShorthandOptions, ...options });
   };
 };
 
-const toJpeg = (svg: Buffer|string) => {
-  return async (options?: IShorthandOptions): Promise<Buffer|string> => {
-    return convertSvg(svg, {...defaultJpegShorthandOptions, ...options});
+const toJpeg = (svg: Buffer | string) => {
+  return async (options?: IShorthandOptions): Promise<Buffer | string> => {
+    return convertSvg(svg, { ...defaultJpegShorthandOptions, ...options });
   };
 };
 
-const toWebp = (svg: Buffer|string) => {
-  return async (options?: IShorthandOptions): Promise<Buffer|string> => {
-    return convertSvg(svg, {...defaultWebpShorthandOptions, ...options});
+const toWebp = (svg: Buffer | string) => {
+  return async (options?: IShorthandOptions): Promise<Buffer | string> => {
+    return convertSvg(svg, { ...defaultWebpShorthandOptions, ...options });
   };
 };
 
-export const from = (svg: Buffer|string) => {
+export const from = (svg: Buffer | string) => {
   return {
     to: to(svg),
     toPng: toPng(svg),

@@ -39,7 +39,7 @@ const getBrowser = async () => {
         }
     });
 };
-const scheduleBrowserForDestruction = () => {
+const scheduleBrowserForDestruction = (timeout = 500) => {
     clearTimeout(browserDestructionTimeout);
     browserDestructionTimeout = setTimeout(async () => {
         /* istanbul ignore next */
@@ -47,15 +47,15 @@ const scheduleBrowserForDestruction = () => {
             browserState = "closed";
             await browserInstance.close();
         }
-    }, 500);
+    }, timeout);
 };
 const convertSvg = async (inputSvg, passedOptions) => {
     const svg = Buffer.isBuffer(inputSvg) ? inputSvg.toString("utf8") : inputSvg;
     const options = Object.assign({}, constants_1.defaultOptions, passedOptions);
     const browser = await getBrowser();
     const page = (await browser.pages())[0];
-    // ⚠️ Offline mode is enabled to prevent any HTTP requests over the network
-    await page.setOfflineMode(true);
+    // Offline mode can be enabled to prevent any HTTP requests over the network
+    await page.setOfflineMode(options.offlineMode);
     // Infer the file type from the file path if no type is provided
     if (!passedOptions.type && options.path) {
         const fileType = helpers_1.getFileTypeFromPath(options.path);
@@ -72,7 +72,7 @@ const convertSvg = async (inputSvg, passedOptions) => {
         clip: options.clip,
         jpegBackground: constants_1.config.jpegBackground
     }));
-    scheduleBrowserForDestruction();
+    scheduleBrowserForDestruction(options.renderTimeout);
     const buffer = Buffer.from(base64, "base64");
     if (options.path) {
         await helpers_1.writeFileAsync(options.path, buffer);

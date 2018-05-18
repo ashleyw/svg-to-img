@@ -8,7 +8,7 @@ export const getFileTypeFromPath = (path: string) => {
 export const stringifyFunction = (func: any, ...argsArray: any[]) => {
   // Remove istanbul coverage instruments
   const functionString = func.toString().replace(/cov_(.+?)\+\+[,;]?/g, "");
-  const args: Array<string|object|number> = [];
+  const args: Array<string | object | number> = [];
 
   for (const argument of argsArray) {
     switch (typeof argument) {

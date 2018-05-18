@@ -10,7 +10,8 @@ export const config = {
 
 export const defaultOptions: IOptions = {
   quality: 1,
-  type: "png"
+  type: "png",
+  offlineMode: true,
 };
 
 export const defaultPngShorthandOptions: IOptions = {
